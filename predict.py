@@ -9,60 +9,7 @@ import pickle
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-
-max_text_len=30
-max_summary_len=8
-#test_value="Gave me such a caffeine overdose I had the shakes, a racing heart and an anxiety attack. Plus it tastes unbelievably bad. I'll stick with coffee, tea and soda, thanks."
-test_value=input("Enter comment:")
-
-cleaned_text=[]
-cleaned_text.append(text_cleaner(test_value,0))
-cleaned_text=np.array(cleaned_text)
-short_text=[]
-for i in range(len(cleaned_text)):
-    if len(cleaned_text[i].split())<=max_text_len: 
-        short_text.append(cleaned_text[i])
-
-x_tr_test=short_text
-
-
-
-file=open('X_training_value.pkl','rb')
-x_trained_text=pickle.load(file)
-file.close()
-
-x_trained_text=np.append(x_trained_text,x_tr_test)
-
-x_tokenizer=Tokenizer()
-x_tokenizer.fit_on_texts(x_trained_text)
-
-cnt,tot_cnt,freq,tot_freq=rareword_coverage(4,x_tokenizer)
-
-
-x_tokenizer=Tokenizer(num_words=tot_cnt-cnt)
-x_tokenizer.fit_on_texts(list(x_trained_text))
-
-x_tr_seq=x_tokenizer.texts_to_sequences(x_tr_test)
-x_tr=pad_sequences(x_tr_seq,maxlen=max_text_len,padding='post')
-
-y_tokenizer=Tokenizer()
-reverse_target_word_index=dict(map(reversed, y_tokenizer.word_index.items()))
-file=open('reverse_target_word_index.pkl','rb')
-reverse_target_word_index=pickle.load(file)
-file.close()
-file=open('reverse_source_word_index.pkl','rb')
-reverse_source_word_index=pickle.load(file)
-file.close()
-file=open('target_word_index.pkl','rb')
-target_word_index=pickle.load(file)
-file.close()
-
-max_summary_len=8
-#target_word_index=y_tokenizer.word_index
-encoder_model=load_model('encoder_model.h5',custom_objects={'AttentionLayer' : AttentionLayer})
-decoder_model=load_model('decoder_model.h5',custom_objects={'AttentionLayer' : AttentionLayer})
-
-def decode_sequence(input_seq):
+def decode_sequence(input_seq,encoder_model,decoder_model,target_word_index,reverse_target_word_index,max_summary_len):
     e_out,e_h,e_c=encoder_model.predict(input_seq)
     target_seq=np.zeros((1,1))
     target_seq[0,0]=target_word_index['sostok']
@@ -83,4 +30,59 @@ def decode_sequence(input_seq):
         e_h,e_c=h,c 
     return decoded_sentence
 
-print("Predicted summary:",decode_sequence(x_tr.reshape(1,max_text_len)))
+
+def predict(test_value):
+    max_text_len=30
+    max_summary_len=8
+    #test_value="Gave me such a caffeine overdose I had the shakes, a racing heart and an anxiety attack. Plus it tastes unbelievably bad. I'll stick with coffee, tea and soda, thanks."
+    
+
+    cleaned_text=[]
+    cleaned_text.append(text_cleaner(test_value,0))
+    cleaned_text=np.array(cleaned_text)
+    short_text=[]
+    for i in range(len(cleaned_text)):
+        if len(cleaned_text[i].split())<=max_text_len: 
+            short_text.append(cleaned_text[i])
+
+    x_tr_test=short_text
+
+
+
+    file=open('X_training_value.pkl','rb')
+    x_trained_text=pickle.load(file)
+    file.close()
+
+    #x_trained_text=np.append(x_trained_text,x_tr_test)
+
+    x_tokenizer=Tokenizer()
+    x_tokenizer.fit_on_texts(x_trained_text)
+
+    cnt,tot_cnt,freq,tot_freq=rareword_coverage(4,x_tokenizer)
+
+
+    x_tokenizer=Tokenizer(num_words=tot_cnt-cnt)
+    x_tokenizer.fit_on_texts(list(x_trained_text))
+
+    x_tr_seq=x_tokenizer.texts_to_sequences(x_tr_test)
+    x_tr=pad_sequences(x_tr_seq,maxlen=max_text_len,padding='post')
+
+    y_tokenizer=Tokenizer()
+    reverse_target_word_index=dict(map(reversed, y_tokenizer.word_index.items()))
+    file=open('reverse_target_word_index.pkl','rb')
+    reverse_target_word_index=pickle.load(file)
+    file.close()
+    file=open('reverse_source_word_index.pkl','rb')
+    reverse_source_word_index=pickle.load(file)
+    file.close()
+    file=open('target_word_index.pkl','rb')
+    target_word_index=pickle.load(file)
+    file.close()
+
+    max_summary_len=8
+    #target_word_index=y_tokenizer.word_index
+    encoder_model=load_model('encoder_model.h5',custom_objects={'AttentionLayer' : AttentionLayer})
+    decoder_model=load_model('decoder_model.h5',custom_objects={'AttentionLayer' : AttentionLayer})
+    return decode_sequence(x_tr.reshape(1,max_text_len),encoder_model,decoder_model,target_word_index,reverse_target_word_index,max_summary_len)
+
+#print(predict("Gave me such a caffeine overdose I had the shakes, a racing heart and an anxiety attack. Plus it tastes unbelievably bad. I'll stick with coffee, tea and soda, thanks."))
