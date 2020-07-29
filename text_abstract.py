@@ -18,13 +18,15 @@ from text_cleaner import text_cleaner,rareword_coverage
 pd.set_option("display.max_colwidth", 200)
 warnings.filterwarnings("ignore")
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-
-data=pd.read_csv("Reviews.csv",nrows=100000)
+#568457
+cols=["Id","ProductId","UserId","ProfileName","HelpfulnessNumerator","HelpfulnessDenominator","Score","Time","Summary","Text"]
+data=pd.read_csv("Reviews.csv",nrows=666856,usecols=cols)
+data=data.sample(frac=1)
 #print(data)
 data.drop_duplicates(subset=['Text'],inplace=True)#dropping duplicates
 data.dropna(axis=0,inplace=True)#dropping na
 #data.info()
-
+#print(data.head)
 
 
 
@@ -56,6 +58,7 @@ for i in data['cleaned_text']:
 
 for i in data['cleaned_summary']:
     summary_word_count.append(len(i.split()))
+ 
 '''
 length_df=pd.DataFrame({'text':text_word_count,'summary':summary_word_count})
 length_df.hist(bins=30)
@@ -64,13 +67,14 @@ plt.show()
 
 cnt=0
 for i in data['cleaned_summary']:
-    if len(i.split())<=8:
+    if len(i.split())<=10:
         cnt=cnt+1
-print(cnt/len(data['cleaned_summary']))
+
+#print(cnt/len(data['cleaned_summary']))
 
 
-max_text_len=30
-max_summary_len=8
+max_text_len=80
+max_summary_len=10
 
 cleaned_text=np.array(data['cleaned_text'])
 cleaned_summary=np.array(data['cleaned_summary'])
@@ -89,8 +93,11 @@ df=pd.DataFrame({'text':short_text,'summary':short_summary})
 df['summary']=df['summary'].apply(lambda x:'sostok '+x+' eostok')
 
 from sklearn.model_selection import train_test_split
-x_tr,x_val,y_tr,y_val=train_test_split(np.array(df['text']),np.array(df['summary']),test_size=0.1,random_state=0,shuffle=True)
-print(x_tr)
+#x_tr,x_val,y_tr,y_val=train_test_split(np.array(df['text']),np.array(df['summary']),test_size=0.1,random_state=0,shuffle=True)
+x_tr,x_val,y_tr,y_val=train_test_split(data['cleaned_text'],data['cleaned_summary'],test_size=0.1,random_state=0,shuffle=True) 
+
+#print(x_tr)
+
 pickle.dump(x_tr,open('X_training_value.pkl','wb'))
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
@@ -118,8 +125,8 @@ y_tokenizer=Tokenizer()
 y_tokenizer.fit_on_texts(list(y_tr))
 
 cnt,tot_cnt,freq,tot_freq=rareword_coverage(6,y_tokenizer)
-print("% of rare words in vocabulary:",(cnt/tot_cnt)*100)
-print("Total Coverage of rare words:",(freq/tot_freq)*100)
+#print("% of rare words in vocabulary:",(cnt/tot_cnt)*100)
+#print("Total Coverage of rare words:",(freq/tot_freq)*100)
 
 y_tokenizer=Tokenizer(num_words=tot_cnt-cnt)
 y_tokenizer.fit_on_texts(list(y_tr))

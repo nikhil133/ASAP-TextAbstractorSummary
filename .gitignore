@@ -232,3 +232,4 @@ hs_err_pid*
 bin/
 *.json
 *.cfg
+.DS_Store
