@@ -34,3 +34,18 @@ predict.py file will load the model and necessary data structre to predict.
 
 Note : Please add or update libraries as necessary
 
+##Android app
+
+TextSummarizer is an android studio project built in kotlin
+
+To run the android studio project create a new android studio project
+
+Select empty activity
+
+Name project as TextSummarizer and set language as kotlin
+
+Replace file to respective folder from repositories TextSummarizer folder  
+
+Run or Build app
+
+An test apk app-debug.apk has been provided inside TextSummarizer folder
