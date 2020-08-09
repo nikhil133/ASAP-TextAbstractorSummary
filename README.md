@@ -34,3 +34,7 @@ predict.py file will load the model and necessary data structre to predict.
 
 Note : Please add or update libraries as necessary
 
+## Front End (Android App)
+
+For front end setup visit repository https://github.com/nikhil133/ASAP-TEXT-SUMMARIZER-APP.git
+
